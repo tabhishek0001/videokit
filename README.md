@@ -23,6 +23,7 @@ Do not rely on opening `index.html` directly with a `file://` URL; browsers comm
 - Source video is read and processed in browser memory.
 - VideoKit does not provide an upload endpoint and does not send media to an application server.
 - The FFmpeg JavaScript module and WebAssembly core are downloaded from a public CDN.
+- The small worker entry point is served from the same GitHub Pages origin to avoid browsers blocking a cross-origin Worker; it imports the pinned FFmpeg worker module from jsDelivr.
 - Generated results are held in a temporary browser object URL until removed or the page is closed.
 
 ## Limits
