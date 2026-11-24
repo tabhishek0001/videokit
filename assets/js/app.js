@@ -3,7 +3,8 @@ const state = { files: [], selectedId: null, ffmpeg: null, loading: false, outpu
 const MAX_FILES = 10;
 const MAX_FILE_SIZE = 500 * 1024 * 1024;
 // Keep the core package version aligned with the pinned @ffmpeg/ffmpeg wrapper.
-const CORE_BASE = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd';
+// @ffmpeg/ffmpeg 0.12.10 pairs with core 0.12.6. Use ESM because classWorkerURL runs a module worker.
+const CORE_BASE = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm';
 const FFmpegModuleURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js';
 
 const formatBytes = (bytes) => {
