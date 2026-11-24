@@ -99,11 +99,37 @@ async function runAction(action) {
     if (action === 'merge') {
       if (state.files.length < 2) throw new Error('Add at least two videos to merge.');
       const names = [];
-      for (let i = 0; i < state.files.length; i++) names.push(await writeInput(ffmpeg, state.files[i].file, i));
-      const manifest = names.map((name) => `file '${name}'`).join('\n');
-      await ffmpeg.writeFile('concat_list.txt', new TextEncoder().encode(manifest));
       output = 'merged_video.mp4';
-      await ffmpeg.exec(['-y','-f','concat','-safe','0','-i','concat_list.txt','-c','copy','-movflags','+faststart',output]);
+      // Never allow a previous merge result to be mistaken for this run's output.
+      await ffmpeg.deleteFile(output).catch(() => {});
+      await ffmpeg.deleteFile('concat_list.txt').catch(() => {});
+      for (let i = 0; i < state.files.length; i++) {
+        names.push(await writeInput(ffmpeg, state.files[i].file, i));
+      }
+      if (names.length !== state.files.length || names.length < 2) {
+        throw new Error('Could not prepare every selected video for merging.');
+      }
+      const manifest = names.map((name) => `file '${name}'`).join('\n') + '\n';
+      await ffmpeg.writeFile('concat_list.txt', new TextEncoder().encode(manifest));
+      setStatus(`Joining ${names.length} videos in media-list order. Re-encoding for a more compatible output…`);
+      // Re-encode instead of stream-copying. Stream copy can fail on clips with
+      // different codecs/time bases; its non-zero exit code previously went unchecked.
+      const exitCode = await ffmpeg.exec([
+        '-y','-fflags','+genpts','-f','concat','-safe','0','-i','concat_list.txt',
+        '-map','0:v:0','-map','0:a?','-c:v','libx264','-preset','ultrafast','-crf','23',
+        '-c:a','aac','-b:a','128k','-movflags','+faststart','-max_muxing_queue_size','1024',output
+      ]);
+      if (exitCode !== 0) {
+        await ffmpeg.deleteFile(output).catch(() => {});
+        throw new Error(`FFmpeg could not merge all ${names.length} videos (exit code ${exitCode}). Use clips with compatible video/audio stream layouts and try again.`);
+      }
+      const outputStat = await ffmpeg.stat(output).catch(() => null);
+      if (!outputStat || !outputStat.size) {
+        throw new Error('FFmpeg finished without creating a valid merged video.');
+      }
+      // Keep the virtual filesystem tidy after a successful merge.
+      for (const name of names) await ffmpeg.deleteFile(name).catch(() => {});
+      await ffmpeg.deleteFile('concat_list.txt').catch(() => {});
     } else {
       const file = validateSelection(); const input = await writeInput(ffmpeg, file);
       if (action === 'trim') {
