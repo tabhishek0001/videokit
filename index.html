@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111827">
+  <meta name="description" content="Trim, merge, convert, resize and extract audio from videos in your browser with VideoKit.">
+  <title>VideoKit — Browser Video Tools</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+  <link href="assets/css/app.css" rel="stylesheet">
+</head>
+<body>
+<header class="topbar">
+  <nav class="container-xl navbar navbar-expand py-3">
+    <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-white" href="./"><span class="brand-mark"><i class="fa-solid fa-film"></i></span> VideoKit</a>
+    <span class="ms-auto privacy-label"><i class="fa-solid fa-shield-halved me-1"></i> Files stay on your device</span>
+  </nav>
+</header>
+<main class="container-xl py-4 py-lg-5">
+  <section class="hero mb-4">
+    <div class="eyebrow">PRIVATE VIDEO WORKSPACE</div>
+    <h1 class="display-6 fw-bold mt-2">Video editing, without the upload.</h1>
+    <p class="text-secondary mb-0">Trim clips, join videos, extract audio and change formats locally in your browser.</p>
+  </section>
+
+  <div class="workspace row g-4">
+    <aside class="col-lg-4 col-xl-3">
+      <div class="panel p-3 p-lg-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2 class="h6 fw-bold mb-0">Your media</h2><button id="clearFiles" class="btn btn-sm btn-link text-decoration-none px-0" type="button">Clear all</button>
+        </div>
+        <label class="dropzone w-100" id="dropzone" for="fileInput">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <strong>Add video files</strong>
+          <span>Choose or drop files here</span>
+          <small>MP4, WebM, MOV, AVI, MKV and more*</small>
+        </label>
+        <input id="fileInput" type="file" accept="video/*,.mkv,.avi,.mov,.m4v,.3gp" multiple hidden>
+        <div class="small text-secondary mt-2">*Actual formats depend on your browser and the processing engine.</div>
+        <div id="fileList" class="file-list mt-3"><div class="empty-state">No files added yet.</div></div>
+        <div class="mt-4 pt-3 border-top">
+          <div class="d-flex justify-content-between small"><span class="text-secondary">Processing engine</span><span id="engineStatus" class="fw-semibold">Not loaded</span></div>
+          <div class="progress mt-2" role="progressbar" aria-label="Processing progress" aria-valuemin="0" aria-valuemax="100"><div id="progressBar" class="progress-bar" style="width:0%"></div></div>
+          <div id="statusText" class="small text-secondary mt-2" aria-live="polite">Add a video to get started.</div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="col-lg-8 col-xl-9">
+      <div class="panel p-3 p-md-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+          <div><div class="eyebrow">TOOLS</div><h2 class="h5 fw-bold mb-0 mt-1">Choose what to do</h2></div>
+          <span class="badge rounded-pill text-bg-light border">Browser processing</span>
+        </div>
+        <div class="tool-tabs" role="tablist" aria-label="Video tools">
+          <button class="tool-tab active" data-tool="trim" type="button"><i class="fa-solid fa-scissors"></i> Trim</button>
+          <button class="tool-tab" data-tool="merge" type="button"><i class="fa-solid fa-layer-group"></i> Merge</button>
+          <button class="tool-tab" data-tool="convert" type="button"><i class="fa-solid fa-arrows-rotate"></i> Convert</button>
+          <button class="tool-tab" data-tool="resize" type="button"><i class="fa-solid fa-expand"></i> Resize</button>
+          <button class="tool-tab" data-tool="audio" type="button"><i class="fa-solid fa-volume-high"></i> Audio</button>
+        </div>
+
+        <div class="tool-content pt-4">
+          <section class="tool-pane active" data-pane="trim">
+            <h3 class="h6 fw-bold">Trim a video</h3><p class="small text-secondary">Keep only the section between your start and end times.</p>
+            <div class="row g-3">
+              <div class="col-sm-6"><label class="form-label" for="trimStart">Start time (seconds)</label><input class="form-control" id="trimStart" type="number" min="0" step="0.1" value="0"></div>
+              <div class="col-sm-6"><label class="form-label" for="trimEnd">End time (seconds)</label><input class="form-control" id="trimEnd" type="number" min="0.1" step="0.1" placeholder="e.g. 18.5"></div>
+            </div>
+            <div class="form-text mt-2">Select one video in the media list first. Trimming re-encodes the selected segment for accurate cuts.</div>
+            <button class="btn btn-primary mt-3 run-tool" data-action="trim" type="button"><i class="fa-solid fa-scissors me-2"></i>Trim video</button>
+          </section>
+
+          <section class="tool-pane" data-pane="merge">
+            <h3 class="h6 fw-bold">Merge videos</h3><p class="small text-secondary">Join the videos in the order shown in your media list.</p>
+            <div class="notice"><i class="fa-solid fa-circle-info me-2"></i>For reliable joining, use clips with compatible codecs, dimensions and frame rates. Files are processed in their current list order.</div>
+            <button class="btn btn-primary mt-3 run-tool" data-action="merge" type="button"><i class="fa-solid fa-layer-group me-2"></i>Merge all videos</button>
+          </section>
+
+          <section class="tool-pane" data-pane="convert">
+            <h3 class="h6 fw-bold">Convert video format</h3><p class="small text-secondary">Convert your selected video to a common browser-friendly format.</p>
+            <label class="form-label" for="convertFormat">Output format</label>
+            <select class="form-select control-narrow" id="convertFormat"><option value="mp4">MP4 (H.264)</option><option value="webm">WebM (VP9)</option></select>
+            <button class="btn btn-primary mt-3 run-tool" data-action="convert" type="button"><i class="fa-solid fa-arrows-rotate me-2"></i>Convert video</button>
+          </section>
+
+          <section class="tool-pane" data-pane="resize">
+            <h3 class="h6 fw-bold">Resize video</h3><p class="small text-secondary">Scale down to a preset resolution while preserving aspect ratio.</p>
+            <label class="form-label" for="resizePreset">Maximum video size</label>
+            <select class="form-select control-narrow" id="resizePreset"><option value="1920:1080">1080p — Full HD</option><option value="1280:720" selected>720p — HD</option><option value="854:480">480p — SD</option><option value="640:360">360p</option></select>
+            <div class="form-text">The video will not be enlarged if it is already smaller than the selected size.</div>
+            <button class="btn btn-primary mt-3 run-tool" data-action="resize" type="button"><i class="fa-solid fa-expand me-2"></i>Resize video</button>
+          </section>
+
+          <section class="tool-pane" data-pane="audio">
+            <h3 class="h6 fw-bold">Audio tools</h3><p class="small text-secondary">Extract the audio track or create a muted video.</p>
+            <div class="row g-3">
+              <div class="col-md-6"><div class="option-card h-100"><i class="fa-solid fa-music"></i><strong>Extract audio</strong><span>Save the audio as an MP3 file.</span><button class="btn btn-outline-primary btn-sm mt-3 run-tool" data-action="extract" type="button">Extract MP3</button></div></div>
+              <div class="col-md-6"><div class="option-card h-100"><i class="fa-solid fa-volume-xmark"></i><strong>Remove audio</strong><span>Export the video without its audio track.</span><button class="btn btn-outline-primary btn-sm mt-3 run-tool" data-action="mute" type="button">Mute video</button></div></div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div class="panel p-3 p-md-4 mt-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"><div><div class="eyebrow">RESULT</div><h2 class="h5 fw-bold mb-0 mt-1">Preview and download</h2></div><span id="outputMeta" class="small text-secondary"></span></div>
+        <div id="resultEmpty" class="result-empty"><i class="fa-solid fa-clapperboard"></i><span>Your processed video or audio will appear here.</span></div>
+        <div id="resultArea" hidden>
+          <video id="resultVideo" class="result-video" controls playsinline hidden></video>
+          <audio id="resultAudio" class="w-100" controls hidden></audio>
+          <div class="d-flex flex-wrap align-items-center gap-3 mt-3"><a id="downloadLink" class="btn btn-success" href="#" download><i class="fa-solid fa-download me-2"></i>Download result</a><button id="discardResult" class="btn btn-outline-secondary" type="button">Remove result</button></div>
+        </div>
+      </div>
+      <div class="privacy-note mt-3"><i class="fa-solid fa-lock me-2"></i><strong>Privacy by design:</strong> your selected media is processed locally using WebAssembly. No video is sent to a VideoKit server. The processing engine is downloaded from a CDN when you first run a tool.</div>
+    </section>
+  </div>
+  <footer class="text-center small text-secondary py-4">VideoKit · Free browser-based video tools</footer>
+</main>
+<script src="assets/js/app.js" type="module"></script>
+</body>
+</html>
