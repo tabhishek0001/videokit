@@ -99,29 +99,29 @@ async function runAction(action) {
       const manifest = names.map((name) => `file '${name}'`).join('\n');
       await ffmpeg.writeFile('concat_list.txt', new TextEncoder().encode(manifest));
       output = 'merged_video.mp4';
-      await ffmpeg.exec(['-f','concat','-safe','0','-i','concat_list.txt','-c','copy','-movflags','+faststart',output]);
+      await ffmpeg.exec(['-y','-f','concat','-safe','0','-i','concat_list.txt','-c','copy','-movflags','+faststart',output]);
     } else {
       const file = validateSelection(); const input = await writeInput(ffmpeg, file);
       if (action === 'trim') {
         const start = Number($('trimStart').value), end = Number($('trimEnd').value);
         if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end <= start) throw new Error('Enter a valid end time greater than the start time.');
         output = `${safeName(file.name.replace(/\.[^.]+$/, ''))}_trimmed.mp4`;
-        await ffmpeg.exec(['-ss', String(start), '-to', String(end), '-i', input, '-c:v','libx264','-preset','ultrafast','-crf','23','-c:a','aac','-movflags','+faststart',output]);
+        await ffmpeg.exec(['-y','-ss', String(start), '-i', input, '-t', String(end - start), '-c:v','libx264','-preset','ultrafast','-crf','23','-c:a','aac','-movflags','+faststart',output]);
       } else if (action === 'convert') {
         const format = $('convertFormat').value;
         output = `${safeName(file.name.replace(/\.[^.]+$/, ''))}.${format}`; mime = format === 'webm' ? 'video/webm' : 'video/mp4';
         const codecArgs = format === 'webm' ? ['-c:v','libvpx-vp9','-crf','32','-b:v','0','-c:a','libopus'] : ['-c:v','libx264','-preset','ultrafast','-crf','23','-c:a','aac','-movflags','+faststart'];
-        await ffmpeg.exec(['-i',input,...codecArgs,output]);
+        await ffmpeg.exec(['-y','-i',input,...codecArgs,output]);
       } else if (action === 'resize') {
         const [w,h] = $('resizePreset').value.split(':');
         output = `${safeName(file.name.replace(/\.[^.]+$/, ''))}_${h}p.mp4`;
-        await ffmpeg.exec(['-i',input,'-vf',`scale=w='min(iw,${w})':h='min(ih,${h})':force_original_aspect_ratio=decrease:force_divisible_by=2`,'-c:v','libx264','-preset','ultrafast','-crf','23','-c:a','aac','-movflags','+faststart',output]);
+        await ffmpeg.exec(['-y','-i',input,'-vf',`scale=w='min(iw,${w})':h='min(ih,${h})':force_original_aspect_ratio=decrease:force_divisible_by=2`,'-c:v','libx264','-preset','ultrafast','-crf','23','-c:a','aac','-movflags','+faststart',output]);
       } else if (action === 'extract') {
         output = `${safeName(file.name.replace(/\.[^.]+$/, ''))}.mp3`; mime = 'audio/mpeg'; isAudio = true;
-        await ffmpeg.exec(['-i',input,'-vn','-codec:a','libmp3lame','-q:a','2',output]);
+        await ffmpeg.exec(['-y','-i',input,'-vn','-codec:a','libmp3lame','-q:a','2',output]);
       } else if (action === 'mute') {
         output = `${safeName(file.name.replace(/\.[^.]+$/, ''))}_muted.mp4`;
-        await ffmpeg.exec(['-i',input,'-an','-c:v','libx264','-preset','ultrafast','-crf','23','-movflags','+faststart',output]);
+        await ffmpeg.exec(['-y','-i',input,'-an','-c:v','libx264','-preset','ultrafast','-crf','23','-movflags','+faststart',output]);
       }
     }
     const blob = await readOutput(ffmpeg, output, mime);
