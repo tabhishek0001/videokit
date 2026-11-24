@@ -72,7 +72,9 @@ async function loadEngine() {
   const toBlobURL = async (url, type) => { const response = await fetch(url); if (!response.ok) throw new Error('Could not download the processing engine. Check your connection and try again.'); return URL.createObjectURL(new Blob([await response.arrayBuffer()], { type })); };
   const coreURL = await toBlobURL(`${CORE_BASE}/ffmpeg-core.js`, 'text/javascript');
   const wasmURL = await toBlobURL(`${CORE_BASE}/ffmpeg-core.wasm`, 'application/wasm');
-  await ffmpeg.load({ coreURL, wasmURL });
+  // The FFmpeg controller worker must be same-origin (GitHub Pages). Its wrapper imports the pinned CDN worker module.
+  const classWorkerURL = new URL('./ffmpeg-worker.js', import.meta.url).href;
+  await ffmpeg.load({ coreURL, wasmURL, classWorkerURL });
   state.ffmpeg = ffmpeg; $('engineStatus').textContent = 'Ready'; return ffmpeg;
 }
 async function writeInput(ffmpeg, file, index = 0) {
