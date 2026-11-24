@@ -2,7 +2,8 @@ const $ = (id) => document.getElementById(id);
 const state = { files: [], selectedId: null, ffmpeg: null, loading: false, outputUrl: null, outputName: null };
 const MAX_FILES = 10;
 const MAX_FILE_SIZE = 500 * 1024 * 1024;
-const CORE_BASE = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd';
+// Keep the core package version aligned with the pinned @ffmpeg/ffmpeg wrapper.
+const CORE_BASE = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd';
 const FFmpegModuleURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js';
 
 const formatBytes = (bytes) => {
